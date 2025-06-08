@@ -11,3 +11,4 @@ What does this library _not_ try to achieve?
 - Good error reporting
 - Warnings
 - Good Performance
+- Non-UTF-8 text parsing
