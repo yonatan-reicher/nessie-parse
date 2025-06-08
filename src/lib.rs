@@ -1,17 +1,17 @@
+mod position;
 mod state;
-mod parser_result;
-pub mod parser;
+mod parser;
+mod primitives;
 
-pub use state::State;
-pub use parser::{Parser, ParserExt};
-
-pub type TokenRange = std::ops::Range<usize>;
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn it_works() {
-    }
-}
+pub use position::{
+    Col,
+    Row,
+    Pos,
+};
+pub use state::{
+    State,
+};
+pub use parser::{
+    ParseResult,
+    Parser,
+};
