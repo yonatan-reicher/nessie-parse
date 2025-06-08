@@ -1,7 +1,8 @@
 [package]
 name = "nessie-parse"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 
 [dependencies]
-rpds = "1.1.*"
+indoc = "2"
+functionality = "1"
