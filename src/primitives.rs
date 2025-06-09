@@ -94,3 +94,79 @@ impl<'a, E: 'a> Parser<'a, char, E, NotFound> {
             .and_then(Parser::of_bool)
     }
 }
+
+impl<'a, T, F, E> Parser<'a, T, E, F> {
+    /// Repeats this parser zero or one times.
+    pub fn maybe<G>(self) -> Parser<'a, Option<T>, E, G>
+    where
+        T: 'a,
+        E: 'a,
+        F: 'a,
+    {
+        let name = format!("maybe({})", &self.name);
+        one_of![self.map(Some), Parser::ret_with(|| None)]
+            .map_fail(|_| panic!("maybe should not fail"))
+            .with_name(name)
+    }
+
+    /// Repeats this parser zero or more times.
+    pub fn repeat_0<G>(self) -> Parser<'a, Vec<T>, E, G>
+    where
+        T: Clone + 'a,
+        E: 'a,
+        F: 'a,
+    {
+        let name = format!("repeat_0({})", &self.name);
+        one_of![
+            self.clone().and_then(move |x| {
+                self.clone()
+                    .repeat_0()
+                    .map(move |xs| vec![x.clone()].mutate(|v| v.extend(xs)))
+            }),
+            Parser::ret_with(Vec::new)
+        ]
+        .map_fail(|_| panic!("repeat_0 should not fail"))
+        .with_name(name)
+    }
+
+    /// Repeats this parser one or more times.
+    pub fn repeat_1(self) -> Parser<'a, Vec<T>, E, F>
+    where
+        T: Clone + 'a,
+        E: 'a,
+        F: 'a,
+    {
+        let name = format!("repeat_1({})", &self.name);
+        self.clone()
+            .and_then(move |x| {
+                self.clone()
+                    .repeat_0()
+                    .map(move |xs| vec![x.clone()].mutate(|v| v.extend(xs)))
+            })
+            .with_name(name)
+    }
+}
+
+impl<'a, T, F, E> Parser<'a, T, E, F> {
+    #[allow(clippy::should_implement_trait)]
+    pub fn not<G>(self) -> Parser<'a, (), E, G>
+    where
+        T: 'a,
+        E: 'a,
+        F: 'a,
+        G: Default + 'a,
+    {
+        #[rustfmt::skip]
+        #[derive(Debug, Clone)]
+        enum ShouldFail { Yes, No }
+
+        let name = format!("not({})", &self.name);
+        self.map_fail(|_| ShouldFail::No)
+            .and_then(|_| Parser::fail(ShouldFail::Yes))
+            .and_then_fail(|f| match f {
+                ShouldFail::Yes => Parser::fail_with(|| G::default()),
+                ShouldFail::No => Parser::ret(()),
+            })
+            .with_name(name)
+    }
+}
