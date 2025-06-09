@@ -21,7 +21,7 @@ pub enum ParseResult<T, E, F = ()> {
 /// The `'a` lifetime is the lifetime of the parser.
 pub struct Parser<'a, T, E, F = ()> {
     /// This name is useful for debugging.
-    name: Rc<String>,
+    pub(crate) name: Rc<String>,
     // Maybe here we might want to use a different lifetime?  --v
     parse: Rc<dyn Fn(State<'a>) -> ParseResult<T, E, F> + 'a>,
 }
