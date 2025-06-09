@@ -1,8 +1,10 @@
 # Nessie Parse
 
-What if parsing was easy?
-
-![Logo](/icon.png)
+<p align="center">
+    <img src="./icon.png" alt="Nessie Parse Logo" width="200"/>
+    <br/>
+    <em>What if parsing was easy?</em>
+</p>
 
 This library let's you define a parser for your language by combining smaller
 parsers together in a simple and familiar syntax to `Iterator` and `Option`
