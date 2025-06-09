@@ -16,3 +16,10 @@ What does this library _not_ try to achieve?
 - Warnings
 - Good Performance
 - Non-UTF-8 text parsing
+
+## Inspired By
+The reason I believe in parser combinators is because of Elm. Elm's compiler has
+great error messages and one of the best white-space-sensitive syntax I've seen
+implemented. That compiler is implemented in Haskell and uses parsers-as-monads.
+You can't have do notation for monads in Rust, but you can get close to it.
+- (The Elm Parser)[https://github.com/elm/compiler/tree/master/compiler/src/Parse]
