@@ -280,7 +280,7 @@ impl<'a, T, E, F> Parser<'a, T, E, F> {
             });
         }
         let name = format!(
-            "OneOf({})",
+            "one_of({})",
             names
                 .iter()
                 .map(|s| s.as_str())
