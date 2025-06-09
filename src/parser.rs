@@ -293,7 +293,7 @@ impl<'a, T, E, F> Parser<'a, T, E, F> {
     pub fn filter(self, pred: impl Fn(&T) -> bool + 'a, fail: F) -> Self
     where
         T: Clone + 'a,
-        E: Clone + 'a,
+        E: 'a,
         F: Clone + 'a,
     {
         let name = format!("filter({})", self.name);
