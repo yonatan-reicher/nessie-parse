@@ -57,6 +57,13 @@ impl<'a, T, E, F> Parser<'a, T, E, F> {
         }
     }
 
+    pub fn ret_with(value: impl Fn() -> T + 'a) -> Self {
+        Parser {
+            name: Rc::new("ret_with".to_string()),
+            parse: Rc::new(move |state| ParseResult::Ok(value(), state.pos)),
+        }
+    }
+
     pub fn fail(value: F) -> Self
     where
         F: Clone + 'a,
