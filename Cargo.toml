@@ -2,6 +2,10 @@
 name = "nessie-parse"
 version = "0.1.1"
 edition = "2021"
+authors = ["Jonathan Reicher"]
+description = "A parser library for easily combining parsers together"
+license = "MIT"
+repository = "https://github.com/yonatan-reicher/nessie-parse"
 
 [dependencies]
 indoc = "2"
