@@ -320,7 +320,7 @@ impl<'a, E, F> Parser<'a, State<'a>, E, F> {
 
 #[macro_export]
 macro_rules! one_of {
-    [ $($parser:expr),* $(,)? ] => {{
-        $crate::parser::Parser::one_of(vec![$($parser),*])
+    ( $($parser:expr),* $(,)? ) => {{
+        $crate::Parser::one_of(vec![$($parser),*])
     }};
 }
