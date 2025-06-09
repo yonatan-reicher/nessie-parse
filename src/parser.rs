@@ -76,7 +76,7 @@ impl<'a, T, E, F> Parser<'a, T, E, F> {
 
     pub fn fail_with(value: impl Fn() -> F + 'a) -> Self {
         Parser {
-            name: Rc::new("fail".to_string()),
+            name: Rc::new("fail_with".to_string()),
             parse: Rc::new(move |state| ParseResult::Fail(value(), state.pos)),
         }
     }
