@@ -91,6 +91,13 @@ impl<'a, T, E, F> Parser<'a, T, E, F> {
         }
     }
 
+    pub fn err_with(value: impl Fn() -> E + 'a) -> Self {
+        Parser {
+            name: Rc::new("err_with".to_string()),
+            parse: Rc::new(move |state| ParseResult::Err(value(), state.pos)),
+        }
+    }
+
     pub fn from_fn<Func>(func: Func) -> Self
     where
         Func: Fn(State<'a>) -> ParseResult<T, E, F> + 'a,
@@ -128,6 +135,36 @@ impl<'a, T, E, F> Parser<'a, T, E, F> {
         .with_name(name)
     }
 
+    pub fn map_fail<G>(self, f: impl Fn(F) -> G + 'a) -> Parser<'a, T, E, G>
+    where
+        F: 'a,
+        E: 'a,
+        T: 'a,
+    {
+        let name = format!("map_fail({})", self.name);
+        Parser::from_fn(move |state| match self.parse(state) {
+            ParseResult::Ok(value, pos) => ParseResult::Ok(value, pos),
+            ParseResult::Fail(fail_value, pos) => ParseResult::Fail(f(fail_value), pos),
+            ParseResult::Err(err_value, pos) => ParseResult::Err(err_value, pos),
+        })
+        .with_name(name)
+    }
+
+    pub fn map_err<E2>(self, f: impl Fn(E) -> E2 + 'a) -> Parser<'a, T, E2, F>
+    where
+        F: 'a,
+        E: 'a,
+        T: 'a,
+    {
+        let name = format!("map_err({})", self.name);
+        Parser::from_fn(move |state| match self.parse(state) {
+            ParseResult::Ok(value, pos) => ParseResult::Ok(value, pos),
+            ParseResult::Fail(fail_value, pos) => ParseResult::Fail(fail_value, pos),
+            ParseResult::Err(err_value, pos) => ParseResult::Err(f(err_value), pos),
+        })
+        .with_name(name)
+    }
+
     pub fn and_then<U, Func>(self, func: Func) -> Parser<'a, U, E, F>
     where
         Func: Fn(T) -> Parser<'a, U, E, F> + 'a,
@@ -140,6 +177,46 @@ impl<'a, T, E, F> Parser<'a, T, E, F> {
             ParseResult::Ok(value, pos) => func(value).parse(state.with_pos(pos)),
             ParseResult::Fail(fail_value, pos) => ParseResult::Fail(fail_value, pos),
             ParseResult::Err(err_value, pos) => ParseResult::Err(err_value, pos),
+        })
+        .with_name(name)
+    }
+
+    /// This is like `and_then`, but the next parser is called when the first
+    /// parser fails.
+    /// Unlike `and_then`, the next parser is started at the same position as
+    /// the first parser (not at the position that it stopped).
+    pub fn and_then_fail<G, Func>(self, func: Func) -> Parser<'a, T, E, G>
+    where
+        Func: Fn(F) -> Parser<'a, T, E, G> + 'a,
+        F: 'a,
+        E: 'a,
+        T: 'a,
+    {
+        let name = format!("and_then_fail({})", self.name);
+        Parser::from_fn(move |state| match self.parse(state) {
+            ParseResult::Ok(value, pos) => ParseResult::Ok(value, pos),
+            ParseResult::Fail(fail_value, _) => func(fail_value).parse(state),
+            ParseResult::Err(err_value, pos) => ParseResult::Err(err_value, pos),
+        })
+        .with_name(name)
+    }
+
+    /// This is like `and_then`, but the next parser is called when the first
+    /// parser returns an error (Notice - this is different from failure).
+    /// Unlike `and_then`, the next parser is started at the same position as
+    /// the first parser (not at the position that it stopped).
+    pub fn and_then_err<E2, Func>(self, func: Func) -> Parser<'a, T, E2, F>
+    where
+        Func: Fn(E) -> Parser<'a, T, E2, F> + 'a,
+        F: 'a,
+        E: 'a,
+        T: 'a,
+    {
+        let name = format!("and_then_err({})", self.name);
+        Parser::from_fn(move |state| match self.parse(state) {
+            ParseResult::Ok(value, pos) => ParseResult::Ok(value, pos),
+            ParseResult::Fail(fail_value, pos) => ParseResult::Fail(fail_value, pos),
+            ParseResult::Err(err_value, _) => func(err_value).parse(state),
         })
         .with_name(name)
     }
@@ -173,6 +250,15 @@ impl<'a, T, E, F> Parser<'a, T, E, F> {
             ParseResult::Err(err_value, pos) => ParseResult::Err(err_value, pos),
         })
         .with_name(name)
+    }
+
+    pub fn or_err(self, e: E) -> Self
+    where
+        T: 'a,
+        E: Clone + 'a,
+        F: 'a,
+    {
+        self.or(Parser::err(e), |f1, _f1_state, (), _f2_state| f1)
     }
 
     pub fn one_of(
