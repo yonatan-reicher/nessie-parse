@@ -28,3 +28,9 @@ impl<'input> State<'input> {
         self.pos.offset >= self.text.len()
     }
 }
+
+impl<'input, T: Into<&'input str>> From<T> for State<'input> {
+    fn from(text: T) -> Self {
+        State::new(text.into())
+    }
+}
