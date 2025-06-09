@@ -20,10 +20,13 @@ pub struct EofFailure;
 
 impl<'a, E: 'a> Parser<'a, char, E, EofFailure> {
     pub fn char() -> Parser<'a, char, E, EofFailure> {
-        let get_char = |state: State| state.rest().chars().next();
-        Parser::state().and_then(move |state| match get_char(state) {
-            None => Parser::fail(EofFailure),
-            Some(ch) => Parser::ret(ch),
+        Parser::from_fn(|state| {
+            if state.rest().is_empty() {
+                ParseResult::Fail(EofFailure, state.pos)
+            } else {
+                let ch = state.rest().chars().next().unwrap();
+                ParseResult::Ok(ch, state.pos.right())
+            }
         })
     }
 }
