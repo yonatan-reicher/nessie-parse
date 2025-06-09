@@ -1,7 +1,5 @@
-use nessie_parse::{
-    parser::{self, OptionParserExt},
-    Parser, ParserExt,
-};
+/*
+use nessie_parse::Parser;
 use std::path::PathBuf;
 
 type Token = String;
@@ -23,7 +21,7 @@ enum Cli {
     Debug(RunMode),
 }
 
-fn run_mode_parser() -> impl Parser<Token, Warning, Error, RunMode> {
+fn run_mode_parser() -> Parser<Token, Warning, Error, RunMode> {
     parser::cases()
         .case(parser::is_eq("--"), parser::ret(|| RunMode::Stdin))
         .case(
@@ -50,3 +48,4 @@ fn cli_parser() -> Parser<Token, Warning, Error> {
         Debug(RunMode),
     }
 }
+*/
