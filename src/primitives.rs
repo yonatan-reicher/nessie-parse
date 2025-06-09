@@ -1,5 +1,8 @@
-use crate::parser::Parser;
+use crate::one_of;
+use crate::parser::{ParseResult, Parser};
 use crate::state::State;
+
+use functionality::prelude::*;
 
 impl<'a, T: 'a, F: 'a, E: 'a> Parser<'a, T, E, F> {
     pub fn of_bool(value: bool) -> Parser<'a, T, E, F>
