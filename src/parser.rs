@@ -269,7 +269,7 @@ impl<'a, T, E, F> Parser<'a, T, E, F> {
         E: 'a,
         F: 'a,
     {
-        let mut ret = Parser::fail_with(|| vec![]);
+        let mut ret = Parser::fail_with(Vec::new);
         let mut names = vec![];
         for parser in parsers {
             names.push(parser.name.clone());
