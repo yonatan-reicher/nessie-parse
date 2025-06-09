@@ -19,7 +19,6 @@ pub enum ParseResult<T, E, F = ()> {
 /// type of the errors it can produce. `F` is the type of failure - this is like
 /// an error, but made to be used for backtracking. It is optional.
 /// The `'a` lifetime is the lifetime of the parser.
-#[derive(Clone)]
 pub struct Parser<'a, T, E, F = ()> {
     /// This name is useful for debugging.
     name: Rc<String>,
@@ -31,6 +30,17 @@ impl<T, E, F> std::fmt::Debug for Parser<'_, T, E, F> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let name = self.name.as_ref();
         write!(f, "Parser(\"{name}\")")
+    }
+}
+
+// Need an explicit clone implementation because the #[derive(Clone)] adds
+// constraints `T: Clone` and such that are unneeded!
+impl<'a, T, E, F> Clone for Parser<'a, T, E, F> {
+    fn clone(&self) -> Self {
+        Self {
+            name: self.name.clone(),
+            parse: self.parse.clone(),
+        }
     }
 }
 
