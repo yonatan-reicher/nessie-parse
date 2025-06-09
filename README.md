@@ -2,6 +2,8 @@
 
 What if parsing was easy?
 
+![Logo](/icon.png)
+
 This library let's you define a parser for your language by combining smaller
 parsers together in a simple and familiar syntax to `Iterator` and `Option`
 types. This way of combining parsers together is called parser combinators.
