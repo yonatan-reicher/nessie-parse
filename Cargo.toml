@@ -1,6 +1,6 @@
 [package]
 name = "nessie-parse"
-version = "0.1.2"
+version = "0.1.3"
 edition = "2021"
 authors = ["Jonathan Reicher"]
 description = "A parser library for easily combining parsers together"
