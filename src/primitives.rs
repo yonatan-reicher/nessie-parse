@@ -28,7 +28,12 @@ impl<'a, E: 'a> Parser<'a, char, E, EofFailure> {
                 ParseResult::Fail(EofFailure, state.pos)
             } else {
                 let ch = state.rest().chars().next().unwrap();
-                ParseResult::Ok(ch, state.pos.right())
+                let new_pos = if ch == '\n' {
+                    state.pos.down()
+                } else {
+                    state.pos.right()
+                };
+                ParseResult::Ok(ch, new_pos)
             }
         })
     }
