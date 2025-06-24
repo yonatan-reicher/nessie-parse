@@ -100,6 +100,17 @@ impl<'a, E: 'a> Parser<'a, char, E, NotFound> {
         Parser::state()
             .map(move |state: State| state.rest().starts_with(expected))
             .and_then(Parser::of_bool)
+            .and_then(move |()| {
+                Parser::from_fn(move |state| {
+                    // TODO: This could be so much cleaner. Also, need to handle newlines?
+                    assert!(expected.chars().all(|c| c != '\n'));
+                    let mut new_pos = state.pos;
+                    for _ in 0..expected.len() {
+                        new_pos = new_pos.right();
+                    }
+                    ParseResult::Ok((), new_pos)
+                })
+            })
     }
 }
 
