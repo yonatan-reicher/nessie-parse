@@ -250,6 +250,25 @@ impl<'a, T, E, F> Parser<'a, T, E, F> {
         .with_name(name)
     }
 
+    pub fn or_ret<G>(self, x: T) -> Parser<'a, T, E, F>
+    where
+        T: Clone + 'a,
+        E: 'a,
+        F: 'a,
+    {
+        self.map(move |_| x.clone())
+    }
+
+    pub fn or_fail<G>(self, f: G) -> Parser<'a, T, E, G>
+    where
+        T: 'a,
+        E: 'a,
+        F: 'a,
+        G: Clone + 'a,
+    {
+        self.map_fail(move |_| f.clone())
+    }
+
     pub fn or_err<G>(self, e: E) -> Parser<'a, T, E, G>
     where
         T: 'a,
