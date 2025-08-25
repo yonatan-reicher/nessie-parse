@@ -12,7 +12,7 @@ fn number<'a>() -> Parser<'a, String, Error> {
         .map(|digits| digits.into_iter().collect())
         .map_fail(|_| ())
         .and_then(|digits: String| {
-            Parser::not(Parser::letter())
+            Parser::not::<()>(Parser::letter())
                 .or_err(Error::CantHaveLetterAfterNumber)
                 .map(move |_| digits.clone())
         })
@@ -45,7 +45,6 @@ fn word<'a>() -> Parser<'a, String, Error> {
                 Parser::digit().map_fail(|_| ()),
                 Parser::char_eq('_'),
             ]
-            .map_fail(|_| ())
             .repeat_1()
             .map(|letters| letters.into_iter().collect())
         })

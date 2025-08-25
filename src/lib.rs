@@ -1,5 +1,6 @@
 mod position;
 mod state;
+mod combine_fail;
 mod parser;
 mod primitives;
 
@@ -14,4 +15,8 @@ pub use state::{
 pub use parser::{
     ParseResult,
     Parser,
+};
+pub use combine_fail::{
+    CombineFail,
+    CombineManyFail,
 };

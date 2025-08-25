@@ -1,4 +1,3 @@
-use crate::one_of;
 use crate::parser::{ParseResult, Parser};
 use crate::state::State;
 
@@ -43,7 +42,7 @@ impl<'a, F: Clone + Default + 'a, E: 'a> Parser<'a, char, E, F> {
     pub fn char_eq(ch: char) -> Parser<'a, char, E, F> {
         Parser::char()
             .map_fail(|_| F::default())
-            .filter(move |&c| c == ch, F::default())
+            .filter(move |&c| c == ch)
     }
 }
 
@@ -54,7 +53,7 @@ impl<'a, E: 'a> Parser<'a, char, E, NotWhitespace> {
     pub fn whitespace() -> Parser<'a, char, E, NotWhitespace> {
         Parser::char()
             .map_fail(|_| NotWhitespace)
-            .filter(|c| c.is_whitespace(), NotWhitespace)
+            .filter(|c| c.is_whitespace())
     }
 }
 
@@ -71,7 +70,7 @@ impl<'a, E: 'a> Parser<'a, char, E, NotALetter> {
     pub fn letter() -> Parser<'a, char, E, NotALetter> {
         Parser::char()
             .map_fail(|_| NotALetter)
-            .filter(|c| c.is_ascii_alphabetic(), NotALetter)
+            .filter(|c| c.is_ascii_alphabetic())
     }
 }
 
@@ -82,7 +81,7 @@ impl<'a, E: 'a> Parser<'a, char, E, NotADigit> {
     pub fn digit() -> Parser<'a, char, E, NotADigit> {
         Parser::char()
             .map_fail(|_| NotADigit)
-            .filter(|c| c.is_ascii_digit(), NotADigit)
+            .filter(|c| c.is_ascii_digit())
     }
 }
 
@@ -123,8 +122,9 @@ impl<'a, T, F, E> Parser<'a, T, E, F> {
         F: 'a,
     {
         let name = format!("maybe({})", &self.name);
-        one_of![self.map(Some), Parser::ret_with(|| None)]
-            .map_fail(|_| panic!("maybe should not fail"))
+        self.map(Some)
+            .or(Parser::<_, _, ()>::ret_with(|| None))
+            .map_fail(|()| panic!("maybe should not fail"))
             .with_name(name)
     }
 
@@ -134,18 +134,18 @@ impl<'a, T, F, E> Parser<'a, T, E, F> {
         T: Clone + 'a,
         E: 'a,
         F: 'a,
+        G: 'a,
     {
         let name = format!("repeat_0({})", &self.name);
-        one_of![
-            self.clone().and_then(move |x| {
+        self.clone()
+            .and_then(move |x| {
                 self.clone()
                     .repeat_0()
                     .map(move |xs| vec![x.clone()].mutate(|v| v.extend(xs)))
-            }),
-            Parser::ret_with(Vec::new)
-        ]
-        .map_fail(|_| panic!("repeat_0 should not fail"))
-        .with_name(name)
+            })
+            .or(Parser::<_, _, G>::ret_with(Vec::new))
+            .map_fail(|(_, g)| g)
+            .with_name(name)
     }
 
     /// Repeats this parser one or more times.

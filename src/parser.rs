@@ -1,5 +1,6 @@
 use crate::position::Pos;
 use crate::state::State;
+use crate::{CombineFail, CombineManyFail};
 
 use std::rc::Rc;
 
@@ -221,16 +222,13 @@ impl<'a, T, E, F> Parser<'a, T, E, F> {
         .with_name(name)
     }
 
-    pub fn or<G, H>(
-        self,
-        other: Parser<'a, T, E, G>,
-        combine_fails: impl Fn(F, State<'a>, G, State<'a>) -> H + 'a,
-    ) -> Parser<'a, T, E, H>
+    pub fn or<G, H>(self, other: Parser<'a, T, E, G>) -> Parser<'a, T, E, H>
     where
         T: 'a,
         E: 'a,
         F: 'a,
         G: 'a,
+        F: CombineFail<'a, G, H>,
     {
         let name = format!("or({} | {})", self.name, other.name);
         Parser::from_fn(move |state| match self.parse(state) {
@@ -240,7 +238,7 @@ impl<'a, T, E, F> Parser<'a, T, E, F> {
                     ParseResult::Ok(value, pos) => ParseResult::Ok(value, pos),
                     ParseResult::Fail(f2, f2_pos) => {
                         let f =
-                            combine_fails(f1, state.with_pos(f1_pos), f2, state.with_pos(f2_pos));
+                            F::combine_fail(f1, state.with_pos(f1_pos), f2, state.with_pos(f2_pos));
                         // The position of the failure will just be at the start
                         ParseResult::Fail(f, state.pos)
                     }
@@ -252,30 +250,32 @@ impl<'a, T, E, F> Parser<'a, T, E, F> {
         .with_name(name)
     }
 
-    pub fn or_err(self, e: E) -> Self
+    pub fn or_err<G>(self, e: E) -> Parser<'a, T, E, G>
     where
         T: 'a,
         E: Clone + 'a,
         F: 'a,
+        G: 'a,
     {
-        self.or(Parser::err(e), |f1, _f1_state, (), _f2_state| f1)
+        self.or(Parser::err(e)).map_fail(|(_f, g)| g)
     }
 
-    pub fn one_of(
+    pub fn one_of<G>(
         parsers: impl IntoIterator<Item = Parser<'a, T, E, F>> + 'a,
-    ) -> Parser<'a, T, E, Vec<(F, Pos)>>
+    ) -> Parser<'a, T, E, G>
     where
         T: 'a,
         E: 'a,
-        F: 'a,
+        F: 'a + CombineManyFail<'a, G>,
+        G: 'a,
     {
         let mut ret = Parser::fail_with(Vec::new);
         let mut names = vec![];
         for parser in parsers {
             names.push(parser.name.clone());
-            ret = ret.or(parser, |f1, _f1_state, f2, f2_state| {
+            ret = ret.or(parser).map_fail(|(f1, _f1_state, f2, f2_state)| {
                 let mut f = f1;
-                f.push((f2, f2_state.pos));
+                f.push((f2, f2_state));
                 f
             });
         }
@@ -287,21 +287,21 @@ impl<'a, T, E, F> Parser<'a, T, E, F> {
                 .collect::<Vec<_>>()
                 .join(", ")
         );
-        ret.with_name(name)
+        ret.map_fail(F::combine_many_fail).with_name(name)
     }
 
-    pub fn filter(self, pred: impl Fn(&T) -> bool + 'a, fail: F) -> Self
+    pub fn filter(self, pred: impl Fn(&T) -> bool + 'a) -> Self
     where
         T: Clone + 'a,
         E: 'a,
-        F: Clone + 'a,
+        F: Clone + Default + 'a,
     {
         let name = format!("filter({})", self.name);
         Parser::and_then(self, move |value| {
             if pred(&value) {
                 Parser::ret(value)
             } else {
-                Parser::fail(fail.clone())
+                Parser::fail(F::default())
             }
         })
         .with_name(name)
@@ -321,6 +321,10 @@ impl<'a, E, F> Parser<'a, State<'a>, E, F> {
 #[macro_export]
 macro_rules! one_of {
     ( $($parser:expr),* $(,)? ) => {{
-        $crate::Parser::one_of(vec![$($parser),*])
+        $crate::Parser::one_of(
+            vec![
+                $($parser),*
+            ]
+        )
     }};
 }
