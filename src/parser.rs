@@ -250,7 +250,7 @@ impl<'a, T, E, F> Parser<'a, T, E, F> {
         .with_name(name)
     }
 
-    pub fn or_ret<G>(self, x: T) -> Parser<'a, T, E, F>
+    pub fn or_ret(self, x: T) -> Parser<'a, T, E, F>
     where
         T: Clone + 'a,
         E: 'a,
